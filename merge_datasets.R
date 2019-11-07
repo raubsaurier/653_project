@@ -40,6 +40,88 @@ currentTemp <- currentTemp[,list(mean_temp=mean(na.omit(temperature))),
 ## merge datasets 
 totalData <- merge(currentTemp, disease_data, by=c("iso3", "year"))
 
+# Load UN data sets.
+health_ex <- data.table(read.csv(paste0(wd,"UN_HealthExpenditure.csv"),
+                                 stringsAsFactors = FALSE, skip = 1))
+
+health_p <- data.table(read.csv(paste0(wd,"UN_HealthPersonnel.csv"),
+                                 stringsAsFactors = FALSE, skip = 1))
+
+education <- read.csv(read.csv(paste0(wd,"UN_Education.csv"),
+                               stringsAsFactors = FALSE,
+                      skip = 1))
+
+# Take the space out of country names.
+countries <- gsub(" ", "", unique(totalData$country), fixed = TRUE)
+
+# Clean UN data sets.
+# Take space out of country names.
+# Select relevant variables.
+# Rename countries if they are different than Irena's data.
+# Filter to only include countries that are in Inena's data. 
+education$Area <- gsub(" ", "", education$X, fixed = TRUE)
+
+education_reduced <- education %>%
+  select(Area, Year, Series, Value) %>%
+  mutate(Area = ifelse(Area == "Czechia", "CzechRepublic", Area)) %>%
+  mutate(Area = ifelse(Area == "SaintLucia", "St.Lucia", Area)) %>%
+  mutate(Area = ifelse(Area == "Serbia", "RepublicofSerbia", Area)) %>%
+  mutate(Area = ifelse(Area == "Korea", "RepublicofKorea", Area)) %>%
+  mutate(Area = ifelse(Area == "UnitedStates", "UnitedStatesofAmerica", Area)) %>%
+  mutate(Area = ifelse(Area == "TimorLeste", "Timor-Leste", Area)) %>%
+  mutate(Area = ifelse(Area == "Venezuela", "Venezuela(Boliv.Rep.of)", Area)) %>%
+  mutate(Area = ifelse(Area == "CaboVerde", "CapeVerde", Area)) %>%
+  mutate(Area = ifelse(Area == "SyrianArabRepublic", "Syria", Area)) %>%
+  filter(Area %in% countries)
+
+health_ex$Area <- gsub(" ", "", health_ex$X, fixed = TRUE)
+
+health_ex_reduced <- health_ex %>%
+  select(Area, Year, Series, Value) %>%
+  mutate(Area = ifelse(Area == "Czechia", "CzechRepublic", Area)) %>%
+  mutate(Area = ifelse(Area == "SaintLucia", "St.Lucia", Area)) %>%
+  mutate(Area = ifelse(Area == "Serbia", "RepublicofSerbia", Area)) %>%
+  mutate(Area = ifelse(Area == "Korea", "RepublicofKorea", Area)) %>%
+  mutate(Area = ifelse(Area == "UnitedStates", "UnitedStatesofAmerica", Area)) %>%
+  mutate(Area = ifelse(Area == "TimorLeste", "Timor-Leste", Area)) %>%
+  mutate(Area = ifelse(Area == "Venezuela", "Venezuela(Boliv.Rep.of)", Area)) %>%
+  mutate(Area = ifelse(Area == "CaboVerde", "CapeVerde", Area)) %>%
+  mutate(Area = ifelse(Area == "SyrianArabRepublic", "Syria", Area)) %>%
+  filter(Area %in% countries)
+
+health_p$Area <- gsub(" ", "", health_p$X, fixed = TRUE)
+
+health_p_reduced <- health_p %>%
+  select(Area, Year, Series, Value) %>%
+  mutate(Area = ifelse(Area == "Czechia", "CzechRepublic", Area)) %>%
+  mutate(Area = ifelse(Area == "SaintLucia", "St.Lucia", Area)) %>%
+  mutate(Area = ifelse(Area == "Serbia", "RepublicofSerbia", Area)) %>%
+  mutate(Area = ifelse(Area == "Korea", "RepublicofKorea", Area)) %>%
+  mutate(Area = ifelse(Area == "UnitedStates", "UnitedStatesofAmerica", Area)) %>%
+  mutate(Area = ifelse(Area == "TimorLeste", "Timor-Leste", Area)) %>%
+  mutate(Area = ifelse(Area == "Venezuela", "Venezuela(Boliv.Rep.of)", Area)) %>%
+  mutate(Area = ifelse(Area == "CaboVerde", "CapeVerde", Area)) %>%
+  mutate(Area = ifelse(Area == "SyrianArabRepublic", "Syria", Area)) %>%
+  filter(Area %in% countries)
+
+# Convert UN data sets to wide data sets. 
+education_wide <- education_reduced %>%
+  spread(Series, Value)
+
+health_ex_wide <- health_ex_reduced %>%
+  spread(Series, Value)
+
+health_p_wide <- health_p_reduced %>%
+  spread(Series, Value)
+
+UN_data <- education_wide %>%
+  full_join(health_ex_wide, by = c("Area", "Year")) %>%
+  full_join(health_p_wide, by = c("Area", "Year")) %>%
+  rename("country" = Area,
+         "year" = Year)
+
+totalData_UN <- full_join(totalData, UN_data, by = c(country, year))
+
 ## output dataset 
 write.csv(totalData, paste0(wd, "totalData.csv"), row.names=FALSE)
 
