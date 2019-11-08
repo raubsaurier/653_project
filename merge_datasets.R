@@ -11,6 +11,9 @@ wd <- "~/repos/653_project/data_files/"
 ## load the data 
 temp_data <- data.table(read.csv(paste0(wd,"1991_2016_temp_data.csv"), stringsAsFactors = FALSE))
 
+refugee_data <- data.table(read.csv(paste0(wd,"wb_urbanization/1991_2016_temp_data.csv"), stringsAsFactors = FALSE))
+
+
 ## disease files downloaded seperately:
 disease_data1 <- data.table(read.csv(paste0(wd,"IHME-GBD_2017_DATA-1066c200-1.csv"), stringsAsFactors = FALSE))
 disease_data2 <- data.table(read.csv(paste0(wd,"IHME-GBD_2017_DATA-1066c200-2.csv"), stringsAsFactors = FALSE))
