@@ -7,18 +7,69 @@ library(ggplot2)
 library(plotly)
 library(countrycode)
 
-wd <- "C:/Users/hochsted/Documents/653_project/data_files/"
+# Kim's wd <- "C:/Users/hochsted/Documents/653_project/data_files/"
+# Irena's wd: wd  <- "~/repos/653_project/data_files/"
 ## load the data 
+
+# ------------------
+## TOTAL DATASET:
+# ------------------
+totalData <- data.table(read.csv(paste0(wd,"totalData.csv"), stringsAsFactors = FALSE))
+## filter only the diseases that we want: 
+totalData <- totalData[cause_name%in%c("Malaria", "Yellow fever", "Encephalitis" ,
+                                     "Dengue", "Zika virus")]
+# ------------------
+## temperature +urban + refugee data 
+# ------------------
 temp_data <- data.table(read.csv(paste0(wd,"1991_2016_temp_data.csv"), stringsAsFactors = FALSE))
+urban_data <- data.table(read.csv(paste0(wd,"wb_urbanization/percent_of_pop_living_in_urban_area.csv"), stringsAsFactors = FALSE))
+refugee_data <- data.table(read.csv(paste0(wd,"unhcr_popstats_export_persons_of_concern_all_data.csv"), stringsAsFactors = FALSE))
 
-refugee_data <- data.table(read.csv(paste0(wd,"wb_urbanization/1991_2016_temp_data.csv"), stringsAsFactors = FALSE))
 
+## clean the refugeee data 
+refugee_data <- refugee_data[-c(1:2),]
+colnames(refugee_data) <- as.character(refugee_data[1, ])
+refugee_data <- refugee_data[-1,]
+refugee_data$Year <- as.numeric(refugee_data$Year)
+refugee_data <- refugee_data[Year>=1990]
 
+colnames(refugee_data)[2] <- "country"
+
+refugee_data <- melt(refugee_data, id.vars = c("Year", "country", "Origin"), variable.name = "refugee_type",
+                     value.name = "num_persons")
+
+refugee_data$iso3 <- countrycode(refugee_data$country, "country.name", "iso3c")
+
+refugee_data <- refugee_data[country=="Central African Rep.", iso3:="CAF"]
+# ------------------
 ## disease files downloaded seperately:
+# ------------------
 disease_data1 <- data.table(read.csv(paste0(wd,"IHME-GBD_2017_DATA-1066c200-1.csv"), stringsAsFactors = FALSE))
 disease_data2 <- data.table(read.csv(paste0(wd,"IHME-GBD_2017_DATA-1066c200-2.csv"), stringsAsFactors = FALSE))
 
 disease_data <- rbind(disease_data1, disease_data2)
+
+# ------------------
+temp_data <- data.table(read.csv(paste0(wd,""), stringsAsFactors = FALSE))
+# ------------------
+
+
+# ------------------
+# Read in EPI data.
+# ------------------
+epi_data <- data.table(read.csv(paste0(wd,"EPIlong.csv"), stringsAsFactors = FALSE))
+
+# Remove spaces in EPI country names.
+epi_data$iso3 <- countrycode(epi_data$Country, "country.name", "iso3c")
+
+
+# Rename year variables, select variables of interest.
+setnames(epi_data, "Year", "year")
+epi_data <- epi_data[,c("year", "iso3", "EPI", "EPInormalized"), with=FALSE]
+
+totalData <- merge(totalData, epi_data, by=c("year", "iso3"))
+
+
 
 ## rename so that data processing is easier 
 names(temp_data) <- c("temperature", "year", "stat", "country", "iso3")
@@ -162,21 +213,6 @@ totalData$country <- gsub(" ", "", unique(totalData$country), fixed = TRUE)
 # Full join the UN data with the total data from Irena.
 totalData_UN <- full_join(totalData, UN_data, by = c("country", "year")) %>%
   filter(year >= 2000)
-
-# Read in EPI data.
-epi <- read.csv(paste0(wd,"EPIlong.csv"), stringsAsFactors = FALSE)
-
-# Remove spaces in EPI country names.
-epi$Country <- gsub(" ", "", epi$Country)
-
-# Rename year and country variables, select variables of interest.
-epi_reduced <- epi %>%
-  select(Country, Year, EPI, EPInormalized) %>%
-  rename(country = "Country",
-         year = "Year")
-
-totalData_UN_EPI <- full_join(totalData_UN, epi_reduced,
-                              by = c("country", "year"))
 
 ## output dataset 
 write.csv(totalData_UN, paste0(wd, "totalData.csv"), row.names=FALSE)
