@@ -161,6 +161,21 @@ totalData$country <- gsub(" ", "", unique(totalData$country), fixed = TRUE)
 totalData_UN <- full_join(totalData, UN_data, by = c("country", "year")) %>%
   filter(year >= 2000)
 
+# Read in EPI data.
+epi <- read.csv(paste0(wd,"EPIlong.csv"), stringsAsFactors = FALSE)
+
+# Remove spaces in EPI country names.
+epi$Country <- gsub(" ", "", epi$Country)
+
+# Rename year and country variables, select variables of interest.
+epi_reduced <- epi %>%
+  select(Country, Year, EPI, EPInormalized) %>%
+  rename(country = "Country",
+         year = "Year")
+
+totalData_UN_EPI <- full_join(totalData_UN, epi_reduced,
+                              by = c("country", "year"))
+
 ## output dataset 
 write.csv(totalData_UN, paste0(wd, "totalData.csv"), row.names=FALSE)
 
