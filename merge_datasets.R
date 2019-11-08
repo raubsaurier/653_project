@@ -1,6 +1,7 @@
 rm(list=ls())
 library(data.table)
 library(dplyr)
+library(tidyr)
 library(lubridate)
 library(ggplot2)
 library(plotly)
@@ -47,7 +48,7 @@ health_ex <- data.table(read.csv(paste0(wd,"UN_HealthExpenditure.csv"),
 health_p <- data.table(read.csv(paste0(wd,"UN_HealthPersonnel.csv"),
                                  stringsAsFactors = FALSE, skip = 1))
 
-education <- read.csv(read.csv(paste0(wd,"UN_Education.csv"),
+education <- data.table(read.csv(paste0(wd,"UN_Education.csv"),
                                stringsAsFactors = FALSE,
                       skip = 1))
 
@@ -120,10 +121,14 @@ UN_data <- education_wide %>%
   rename("country" = Area,
          "year" = Year)
 
-totalData_UN <- full_join(totalData, UN_data, by = c(country, year))
+# Take the space out of country names.
+totalData$country <- gsub(" ", "", unique(totalData$country), fixed = TRUE)
+
+# Full join the UN data with the total data from Irena.
+totalData_UN <- full_join(totalData, UN_data, by = c("country", "year"))
 
 ## output dataset 
-write.csv(totalData, paste0(wd, "totalData.csv"), row.names=FALSE)
+write.csv(totalData_UN, paste0(wd, "totalData.csv"), row.names=FALSE)
 
 
 
