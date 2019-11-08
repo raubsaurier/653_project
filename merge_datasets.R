@@ -44,6 +44,8 @@ currentTemp <- currentTemp[,list(mean_temp=mean(na.omit(temperature))),
 ## merge datasets 
 totalData <- merge(currentTemp, disease_data, by=c("iso3", "year"))
 
+
+
 # Load UN data sets.
 health_ex <- data.table(read.csv(paste0(wd,"UN_HealthExpenditure.csv"),
                                  stringsAsFactors = FALSE, skip = 1))
