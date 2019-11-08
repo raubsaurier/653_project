@@ -11,18 +11,45 @@ library(countrycode)
 # Irena's wd: wd  <- "~/repos/653_project/data_files/"
 ## load the data 
 
-# ------------------
-## TOTAL DATASET:
-# ------------------
-totalData <- data.table(read.csv(paste0(wd,"totalData.csv"), stringsAsFactors = FALSE))
-## filter only the diseases that we want: 
+###----------------------------
+##temp and disease data 
+##---------------------------
+disease_data1 <- data.table(read.csv(paste0(wd,"IHME-GBD_2017_DATA-1066c200-1.csv"), stringsAsFactors = FALSE))
+disease_data2 <- data.table(read.csv(paste0(wd,"IHME-GBD_2017_DATA-1066c200-2.csv"), stringsAsFactors = FALSE))
+
+disease_data <- rbind(disease_data1, disease_data2)
+
+# temp data 
+temp_data <- data.table(read.csv(paste0(wd,"1991_2016_temp_data.csv"), stringsAsFactors = FALSE))
+## rename so that data processing is easier 
+names(temp_data) <- c("temperature", "year", "stat", "country", "iso3")
+setnames(disease_data, c("val", "upper", "lower"), c("disease_value", "disease_upperCI", "disease_lowerCI"))
+
+
+## add ISO code to the disease dataset (3 letter abbreviation of country name): 
+disease_data$iso3 <- countrycode(disease_data$location_name, 'country.name', 'iso3c')
+## the ISO3 for temp data is messed up so just replace it with standardized ones 
+temp_data$iso3 <- countrycode(temp_data$country, 'country.name', 'iso3c')
+
+## North Korea has no observations so we'll remove it for now 
+currentTemp <- temp_data[!is.na(iso3)]
+
+## change from character to numeric
+currentTemp$temperature <- as.numeric(currentTemp$temperature)
+
+## since the disease data is at the annual level, for now: average the temp data by year: 
+## can undo this if we decide to do different time measurement
+currentTemp <- currentTemp[,list(mean_temp=mean(na.omit(temperature))), 
+                           by=c("year", "country", "iso3")]
+
+## merge datasets 
+totalData <- merge(currentTemp, disease_data, by=c("iso3", "year"))
 totalData <- totalData[cause_name%in%c("Malaria", "Yellow fever", "Encephalitis" ,
-                                     "Dengue", "Zika virus")]
+                                       "Dengue", "Zika virus")&measure_name=="Incidence"&metric_name=="Rate"]
 
 # ------------------
-## temperature +urban + refugee data 
+## urban + refugee data 
 # ------------------
-temp_data <- data.table(read.csv(paste0(wd,"1991_2016_temp_data.csv"), stringsAsFactors = FALSE))
 
 refugee_data <- data.table(read.csv(paste0(wd,"unhcr_popstats_export_persons_of_concern_all_data.csv"), stringsAsFactors = FALSE))
 
@@ -70,6 +97,7 @@ refugee_subset <- refugee_data[,c("year", "iso3", "refugee_origin_country", "ref
 ## refugee and urban data 
 WDI_data <- merge(refugee_subset, urban_data, by=c("year", "iso3"))
 
+## merge to total dataset 
 totalData <- merge(totalData, WDI_data, by=c("year", "iso3"), allow.cartesian=TRUE)
 
 # ------------------
@@ -90,22 +118,8 @@ gdpData <- gdpData[year>=1990]
 
 totalData <- merge(gdpData, totalData, by=c("year", "iso3"))
 
-totalData$country.x <- NULL
-totalData$country.y <- NULL
-
-
-# ------------------
-## disease files downloaded seperately:
-# ------------------
-disease_data1 <- data.table(read.csv(paste0(wd,"IHME-GBD_2017_DATA-1066c200-1.csv"), stringsAsFactors = FALSE))
-disease_data2 <- data.table(read.csv(paste0(wd,"IHME-GBD_2017_DATA-1066c200-2.csv"), stringsAsFactors = FALSE))
-
-disease_data <- rbind(disease_data1, disease_data2)
-
-# ------------------
-temp_data <- data.table(read.csv(paste0(wd,""), stringsAsFactors = FALSE))
-# ------------------
-
+#totalData$country.x <- NULL
+#totalData$country.y <- NULL
 
 # ------------------
 # Read in EPI data.
@@ -123,34 +137,9 @@ epi_data <- epi_data[,c("year", "iso3", "EPI", "EPInormalized"), with=FALSE]
 totalData <- merge(totalData, epi_data, by=c("year", "iso3"))
 
 
-
-## rename so that data processing is easier 
-names(temp_data) <- c("temperature", "year", "stat", "country", "iso3")
-setnames(disease_data, c("val", "upper", "lower"), c("disease_value", "disease_upperCI", "disease_lowerCI"))
-
-
-## add ISO code to the disease dataset (3 letter abbreviation of country name): 
-disease_data$iso3 <- countrycode(disease_data$location_name, 'country.name', 'iso3c')
-## the ISO3 for temp data is messed up so just replace it with standardized ones 
-temp_data$iso3 <- countrycode(temp_data$country, 'country.name', 'iso3c')
-
-## North Korea has no observations so we'll remove it for now 
-currentTemp <- temp_data[!is.na(iso3)]
-
-## change from character to numeric
-currentTemp$temperature <- as.numeric(currentTemp$temperature)
-
-## since the disease data is at the annual level, for now: average the temp data by year: 
-## can undo this if we decide to do different time measurement
-currentTemp <- currentTemp[,list(mean_temp=mean(na.omit(temperature))), 
-                                 by=c("year", "country", "iso3")]
-
-## merge datasets 
-totalData <- merge(currentTemp, disease_data, by=c("iso3", "year"))
-
-
-
+#---------------------------
 # Load UN data sets.
+#----------------------------
 health_ex <- data.table(read.csv(paste0(wd,"UN_HealthExpenditure.csv"),
                                  stringsAsFactors = FALSE, skip = 1))
 
@@ -169,7 +158,33 @@ countries <- gsub(" ", "", unique(totalData$country), fixed = TRUE)
 # Select relevant variables.
 # Rename countries if they are different than Irena's data.
 # Filter to only include countries that are in Inena's data. 
-education$Area <- gsub(" ", "", education$X, fixed = TRUE)
+education$iso3 <- countrycode(education$X, "country.name", "iso3c")
+education_reduced <- education[!is.na(iso3)]
+
+health_p$iso3 <- countrycode(health_p$X, "country.name", "iso3c")
+health_reduced <- health_p[!is.na(iso3)]
+
+health_ex$iso3 <- countrycode(health_ex$X, "country.name", "iso3c")
+health_reduced2 <- health_ex[!is.na(iso3)]
+
+setnames(health_reduced, c("Series", "Value","Year"), c("health_p_measure", "health_p_value","year"))
+
+health_reduced <- health_reduced[,c("health_p_measure", "health_p_value","year", "iso3"),with=FALSE]
+
+
+setnames(health_reduced2, c("Series", "Value","Year"), c("health_exp_measure", "health_exp_value",                                                         "year"))
+health_reduced2 <- health_reduced2[,c("health_exp_measure", "health_exp_value","year", "iso3"),with=FALSE]
+
+setnames(education_reduced, c("Series", "Value","Year"), c("edu_measure", "edu_value","year"))
+education_reduced <- education_reduced[,c("edu_measure", "edu_value","year", "iso3"),with=FALSE]
+
+
+health_data <- merge(health_reduced, health_reduced2, by=c("year", "iso3"))
+health_edu_data <- merge(health_data, education_reduced,by=c("year", "iso3"),allow.cartesian=TRUE)
+
+totalData <- merge(health_edu_data, totalData, by=c("year", "iso3"), allow.cartesian=TRUE)
+
+
 
 education_reduced <- education %>%
   select(Area, Year, Series, Value) %>%
