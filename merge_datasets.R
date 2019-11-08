@@ -64,7 +64,7 @@ colnames(urban_data)[2:31] <- seq(1990, 2019, 1)
 
 urban_data <- melt(urban_data, id.vars = c("iso3"), variable.name = "year",
                      value.name = "urban_perc")
-
+urban_data  <- urban_data[!is.na(iso3)]
 
 urban_data$urban_perc <- as.numeric(urban_data$urban_perc)
 urban_data$year <- as.character(urban_data$year)
@@ -82,17 +82,26 @@ refugee_data <- refugee_data[year>=1990]
 colnames(refugee_data)[2] <- "country"
 
 
-refugee_data <- melt(refugee_data, id.vars = c("year", "country", "Origin"), variable.name = "refugee_type",
+
+refugee_data <- melt(refugee_data, id.vars = c("year", "country"), variable.name = "refugee_type",
                      value.name = "num_persons")
 
 setnames(refugee_data, "Origin", "refugee_origin_country")
 
 refugee_data$iso3 <- countrycode(refugee_data$country, "country.name", "iso3c")
 
+
 refugee_data <- refugee_data[country=="Central African Rep.", iso3:="CAF"]
+refugee_data  <- refugee_data[!is.na(iso3)]
+
 
 refugee_subset <- refugee_data[,c("year", "iso3", "refugee_origin_country", "refugee_type","num_persons")
                                , with=FALSE]
+
+refugee_subset$num_persons <- as.numeric(refugee_subset$num_persons)
+refugee_subset  <- refugee_subset [,list(num_persons=sum(na.omit(num_persons))), by=c("refugee_type",
+                                                                    "iso3","year")]
+
 
 ## refugee and urban data 
 WDI_data <- merge(refugee_subset, urban_data, by=c("year", "iso3"))
@@ -134,7 +143,7 @@ epi_data$iso3 <- countrycode(epi_data$Country, "country.name", "iso3c")
 setnames(epi_data, "Year", "year")
 epi_data <- epi_data[,c("year", "iso3", "EPI", "EPInormalized"), with=FALSE]
 
-totalData <- merge(totalData, epi_data, by=c("year", "iso3"))
+totalData <- merge(totalData, epi_data, all.x=TRUE, by=c("year", "iso3"))
 
 
 #---------------------------
@@ -168,9 +177,12 @@ health_ex$iso3 <- countrycode(health_ex$X, "country.name", "iso3c")
 health_reduced2 <- health_ex[!is.na(iso3)]
 
 setnames(health_reduced, c("Series", "Value","Year"), c("health_p_measure", "health_p_value","year"))
-
 health_reduced <- health_reduced[,c("health_p_measure", "health_p_value","year", "iso3"),with=FALSE]
-
+health_reduced <- health_reduced[health_p_measure%in%c("Health personnel: Physicians (number)",
+                                                       "Health personnel: Physicians (per 1000 population)",
+                                                       "Health personnel: Pharmacists (number)",
+                                                       "Health personnel: Pharmacists (per 1000 population)"
+                                                       )]
 
 setnames(health_reduced2, c("Series", "Value","Year"), c("health_exp_measure", "health_exp_value",                                                         "year"))
 health_reduced2 <- health_reduced2[,c("health_exp_measure", "health_exp_value","year", "iso3"),with=FALSE]
@@ -182,108 +194,9 @@ education_reduced <- education_reduced[,c("edu_measure", "edu_value","year", "is
 health_data <- merge(health_reduced, health_reduced2, by=c("year", "iso3"))
 health_edu_data <- merge(health_data, education_reduced,by=c("year", "iso3"),allow.cartesian=TRUE)
 
-totalData <- merge(health_edu_data, totalData, by=c("year", "iso3"), allow.cartesian=TRUE)
+totalData <- merge(health_edu_data, totalData, all.y=TRUE, by=c("year", "iso3"), allow.cartesian=TRUE)
 
-
-
-education_reduced <- education %>%
-  select(Area, Year, Series, Value) %>%
-  mutate(Area = ifelse(Area == "Czechia", "CzechRepublic", Area)) %>%
-  mutate(Area = ifelse(Area == "SaintLucia", "St.Lucia", Area)) %>%
-  mutate(Area = ifelse(Area == "Serbia", "RepublicofSerbia", Area)) %>%
-  mutate(Area = ifelse(Area == "Korea", "RepublicofKorea", Area)) %>%
-  mutate(Area = ifelse(Area == "UnitedStates", "UnitedStatesofAmerica", Area)) %>%
-  mutate(Area = ifelse(Area == "TimorLeste", "Timor-Leste", Area)) %>%
-  mutate(Area = ifelse(Area == "Venezuela", "Venezuela(Boliv.Rep.of)", Area)) %>%
-  mutate(Area = ifelse(Area == "CaboVerde", "CapeVerde", Area)) %>%
-  mutate(Area = ifelse(Area == "SyrianArabRepublic", "Syria", Area)) %>%
-  filter(Area %in% countries)
-
-health_ex$Area <- gsub(" ", "", health_ex$X, fixed = TRUE)
-
-health_ex_reduced <- health_ex %>%
-  select(Area, Year, Series, Value) %>%
-  mutate(Area = ifelse(Area == "Czechia", "CzechRepublic", Area)) %>%
-  mutate(Area = ifelse(Area == "SaintLucia", "St.Lucia", Area)) %>%
-  mutate(Area = ifelse(Area == "Serbia", "RepublicofSerbia", Area)) %>%
-  mutate(Area = ifelse(Area == "Korea", "RepublicofKorea", Area)) %>%
-  mutate(Area = ifelse(Area == "UnitedStates", "UnitedStatesofAmerica", Area)) %>%
-  mutate(Area = ifelse(Area == "TimorLeste", "Timor-Leste", Area)) %>%
-  mutate(Area = ifelse(Area == "Venezuela", "Venezuela(Boliv.Rep.of)", Area)) %>%
-  mutate(Area = ifelse(Area == "CaboVerde", "CapeVerde", Area)) %>%
-  mutate(Area = ifelse(Area == "SyrianArabRepublic", "Syria", Area)) %>%
-  filter(Area %in% countries)
-
-health_p$Area <- gsub(" ", "", health_p$X, fixed = TRUE)
-
-health_p_reduced <- health_p %>%
-  select(Area, Year, Series, Value) %>%
-  mutate(Area = ifelse(Area == "Czechia", "CzechRepublic", Area)) %>%
-  mutate(Area = ifelse(Area == "SaintLucia", "St.Lucia", Area)) %>%
-  mutate(Area = ifelse(Area == "Serbia", "RepublicofSerbia", Area)) %>%
-  mutate(Area = ifelse(Area == "Korea", "RepublicofKorea", Area)) %>%
-  mutate(Area = ifelse(Area == "UnitedStates", "UnitedStatesofAmerica", Area)) %>%
-  mutate(Area = ifelse(Area == "TimorLeste", "Timor-Leste", Area)) %>%
-  mutate(Area = ifelse(Area == "Venezuela", "Venezuela(Boliv.Rep.of)", Area)) %>%
-  mutate(Area = ifelse(Area == "CaboVerde", "CapeVerde", Area)) %>%
-  mutate(Area = ifelse(Area == "SyrianArabRepublic", "Syria", Area)) %>%
-  filter(Area %in% countries)
-
-# Convert UN data sets to wide data sets. 
-education_wide <- education_reduced %>%
-  spread(Series, Value)
-
-education_wide$gross_enroll_primaryF <- education_wide$`Gross enrollment ratio - Primary (female)`
-education_wide$gross_enroll_primaryM <- education_wide$`Gross enrollement ratio - Primary (male)`
-education_wide$gross_enroll_secondaryF <- education_wide$`Gross enrollment ratio - Secondary (female)`
-education_wide$gross_enroll_secondaryM <- education_wide$`Gross enrollment ratio - Secondary (male)`
-education_wide$gross_enroll_tertiaryF <- education_wide$`Gross enrollment ratio - Tertiary (female)`
-education_wide$gross_enroll_tertiaryM <- education_wide$`Gross enrollment ratio - Tertiary (male)`
-education_wide$primary_thousands <- education_wide$`Students enrolled in primary education (thousands)`
-education_wide$secondary_thousands <- education_wide$`Students enrolled in secondary education (thousands)`
-education_wide$tertiary_thousands <- education_wide$`Students enrolled in tertiary education (thousands)`
-
-education_wide_reduced <- education_wide %>%
-  select(Area, Year, gross_enroll_primaryF, gross_enroll_primaryM,
-         gross_enroll_secondaryF, gross_enroll_secondaryM,
-         gross_enroll_tertiaryF, gross_enroll_tertiaryM,
-         primary_thousands, secondary_thousands, tertiary_thousands)
-
-health_ex_wide <- health_ex_reduced %>%
-  spread(Series, Value)
-
-health_ex_wide$health_ex_percentGDP <- health_ex_wide$`Current health expenditure (% of GDP)`
-health_ex_wide$health_ex_percentGov <- health_ex_wide$`Domestic general government health expenditure (% of total government expenditure)`
-
-health_ex_wide_reduced <- health_ex_wide %>%
-  select(Area, Year, health_ex_percentGDP, health_ex_percentGov)
-
-health_p_wide <- health_p_reduced %>%
-  spread(Series, Value)
-
-health_p_wide$pharma_n <- health_p_wide$`Health personnel: Pharmacists (number)`
-health_p_wide$pharma_per1000 <- health_p_wide$`Health personnel: Pharmacists (per 1000 population)`
-health_p_wide$phys_n <- health_p_wide$`Health personnel: Physicians (number)`
-health_p_wide$phys_per1000 <- health_p_wide$`Health personnel: Physicians (per 1000 population)`
-
-health_p_wide_reduced <- health_p_wide %>%
-  select(Area, Year, pharma_n, pharma_per1000, phys_n, phys_per1000)
-
-UN_data <- education_wide_reduced %>%
-  full_join(health_ex_wide_reduced, by = c("Area", "Year")) %>%
-  full_join(health_p_wide_reduced, by = c("Area", "Year")) %>%
-  rename("country" = Area,
-         "year" = Year)
-
-# Take the space out of country names.
-totalData$country <- gsub(" ", "", unique(totalData$country), fixed = TRUE)
-
-# Full join the UN data with the total data from Irena.
-totalData_UN <- full_join(totalData, UN_data, by = c("country", "year")) %>%
-  filter(year >= 2000)
-
-## output dataset 
-write.csv(totalData_UN, paste0(wd, "totalData.csv"), row.names=FALSE)
+write.csv(totalData, paste0(wd, "totalData.csv"), row.names=FALSE)
 
 
 
