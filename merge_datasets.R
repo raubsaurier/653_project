@@ -18,29 +18,82 @@ totalData <- data.table(read.csv(paste0(wd,"totalData.csv"), stringsAsFactors = 
 ## filter only the diseases that we want: 
 totalData <- totalData[cause_name%in%c("Malaria", "Yellow fever", "Encephalitis" ,
                                      "Dengue", "Zika virus")]
+
 # ------------------
 ## temperature +urban + refugee data 
 # ------------------
 temp_data <- data.table(read.csv(paste0(wd,"1991_2016_temp_data.csv"), stringsAsFactors = FALSE))
-urban_data <- data.table(read.csv(paste0(wd,"wb_urbanization/percent_of_pop_living_in_urban_area.csv"), stringsAsFactors = FALSE))
+
 refugee_data <- data.table(read.csv(paste0(wd,"unhcr_popstats_export_persons_of_concern_all_data.csv"), stringsAsFactors = FALSE))
+
+## urban data 
+urban_data <- data.table(read.csv(paste0(wd,"wb_urbanization/percent_of_pop_living_in_urban_area.csv"), stringsAsFactors = FALSE))
+
+## don't need the first two columns 
+urban_data <- urban_data[,-c(1:3)]
+
+colnames(urban_data)[1] <- c("iso3")
+colnames(urban_data)[2:31] <- seq(1990, 2019, 1)
+
+urban_data <- melt(urban_data, id.vars = c("iso3"), variable.name = "year",
+                     value.name = "urban_perc")
+
+
+urban_data$urban_perc <- as.numeric(urban_data$urban_perc)
+urban_data$year <- as.character(urban_data$year)
+urban_data$year <- as.numeric(urban_data$year)
 
 
 ## clean the refugeee data 
 refugee_data <- refugee_data[-c(1:2),]
 colnames(refugee_data) <- as.character(refugee_data[1, ])
 refugee_data <- refugee_data[-1,]
-refugee_data$Year <- as.numeric(refugee_data$Year)
-refugee_data <- refugee_data[Year>=1990]
+colnames(refugee_data)[1] <- "year"
+refugee_data$year <- as.numeric(refugee_data$year)
+refugee_data <- refugee_data[year>=1990]
 
 colnames(refugee_data)[2] <- "country"
 
-refugee_data <- melt(refugee_data, id.vars = c("Year", "country", "Origin"), variable.name = "refugee_type",
+
+refugee_data <- melt(refugee_data, id.vars = c("year", "country", "Origin"), variable.name = "refugee_type",
                      value.name = "num_persons")
+
+setnames(refugee_data, "Origin", "refugee_origin_country")
 
 refugee_data$iso3 <- countrycode(refugee_data$country, "country.name", "iso3c")
 
 refugee_data <- refugee_data[country=="Central African Rep.", iso3:="CAF"]
+
+refugee_subset <- refugee_data[,c("year", "iso3", "refugee_origin_country", "refugee_type","num_persons")
+                               , with=FALSE]
+
+## refugee and urban data 
+WDI_data <- merge(refugee_subset, urban_data, by=c("year", "iso3"))
+
+totalData <- merge(totalData, WDI_data, by=c("year", "iso3"), allow.cartesian=TRUE)
+
+# ------------------
+## GDP data 
+# ------------------
+gdpData <- data.table(read.csv(paste0(wd,"Final_GDP_Data.csv"), stringsAsFactors = FALSE))
+gdpData <- gdpData[,-c(1, 66:68)]
+colnames(gdpData)[1:4] <- c("country", "iso3", "gdp_ind_name", "gdp_ind_code")
+colnames(gdpData)[5:64] <- seq(1960,2019,1)
+
+gdpData <- melt(gdpData, id.vars = c("gdp_ind_name", "gdp_ind_code", "country", "iso3"),
+                variable.name = "year",
+                     value.name = "gdp_measurement")
+
+gdpData$year <- as.numeric(as.character(gdpData$year))
+
+gdpData <- gdpData[year>=1990]
+
+totalData <- merge(gdpData, totalData, by=c("year", "iso3"))
+
+totalData$country.x <- NULL
+totalData$country.y <- NULL
+
+
 # ------------------
 ## disease files downloaded seperately:
 # ------------------
