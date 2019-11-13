@@ -1,0 +1,149 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1348\cocoasubrtf170
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Calibri;\f2\fnil\fcharset0 LucidaGrande;
+\f3\froman\fcharset0 Times-Roman;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue233;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{hyphen\}}{\leveltext\leveltemplateid2\'01\uc0\u8259 ;}{\levelnumbers;}\fi-360\li1440\lin1440 }{\listname ;}\listid1}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
+\margl1440\margr1440\vieww16040\viewh11760\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\fs24 \cf0 Data Dictionary\
+\
+(include variable definition and source, where applicable)\
+\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural
+\ls1\ilvl0\cf0 {\listtext	\'95	}
+\b year
+\b0 \
+\pard\tx940\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li1440\fi-1440\pardirnatural
+\ls1\ilvl1\cf0 {\listtext	\uc0\u8259 	}
+\b def
+\b0 : time of observation\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural
+\ls1\ilvl0\cf0 {\listtext	\'95	}iso3\
+\pard\tx940\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li1440\fi-1440\pardirnatural
+\ls1\ilvl1\cf0 {\listtext	\uc0\u8259 	}
+\b def
+\b0 : country code\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural
+\ls1\ilvl0\cf0 {\listtext	\'95	}health_p_measure\
+{\listtext	\'95	}health_p_value\
+{\listtext	\'95	}health_exp_measure\
+{\listtext	\'95	}health_exp_value\
+{\listtext	\'95	}edu_measure\
+{\listtext	\'95	}edu_value\
+{\listtext	\'95	}gdp_ind_name\
+{\listtext	\'95	}gdp_ind_code\
+{\listtext	\'95	}gdp_measurement\
+{\listtext	\'95	}mean_temp\
+{\listtext	\'95	}measure_id\
+{\listtext	\'95	}measure_name\
+{\listtext	\'95	}location_id\
+{\listtext	\'95	}location_name\
+{\listtext	\'95	}sex_id\
+{\listtext	\'95	}sex_name\
+{\listtext	\'95	}age_id\
+{\listtext	\'95	}age_name\
+{\listtext	\'95	}cause_id\
+{\listtext	\'95	}cause_name\
+{\listtext	\'95	}metric_id\
+{\listtext	\'95	}metric_name\
+{\listtext	\'95	}disease_value\
+{\listtext	\'95	}disease_upperCI\
+{\listtext	\'95	}disease_lowerCI\
+{\listtext	\'95	}refugee_type\
+{\listtext	\'95	}num_persons\
+{\listtext	\'95	}urban_perc\
+{\listtext	\'95	}EPI\
+{\listtext	\'95	}EPInormalized\
+{\listtext	\'95	}
+\b country
+\b0 \
+\pard\tx940\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li1440\fi-1440\pardirnatural
+\ls1\ilvl1\cf0 {\listtext	\uc0\u8259 	}
+\b def
+\b0 : name of country\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural
+\ls1\ilvl0\cf0 {\listtext	\'95	}
+\b precip
+\b0 \
+\pard\tx940\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li1440\fi-1440\pardirnatural
+\ls1\ilvl1\cf0 {\listtext	\uc0\u8259 	}
+\b def
+\b0 : annual precipitation in 
+\f1 million cubic meters\
+\ls1\ilvl1
+\f0 {\listtext	\uc0\u8259 	}
+\b source
+\b0 : United Nations\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural
+\ls1\ilvl0\cf0 {\listtext	\'95	}
+\b gini_of_household_income
+\b0 \
+\pard\tx940\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li1440\fi-1440\pardirnatural
+\ls1\ilvl1\cf0 {\listtext	\uc0\u8259 	}
+\b def
+\b0 : 
+\f2 gini of household income reported in Gallup, by wp5-year
+\f0 \
+{\listtext	\uc0\u8259 	}
+\b source
+\b0 : online-data-chapter-2-whr-2017.csv (Kim's link)\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural
+\ls1\ilvl0\cf0 {\listtext	\'95	}
+\b healthy_life_exp_at_birth
+\b0 \
+\pard\tx940\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li1440\fi-1440\pardirnatural
+\ls1\ilvl1\cf0 {\listtext	\uc0\u8259 	}
+\b def
+\b0 : 
+\f2 Healthy life expectancy at birth
+\f0 \
+{\listtext	\uc0\u8259 	}
+\b source
+\b0 : online-data-chapter-2-whr-2017.csv (Kim's link)\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural
+\ls1\ilvl0\cf0 {\listtext	\'95	}
+\b log_GDP_per_capita
+\b0 \
+\pard\tx940\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li1440\fi-1440\pardirnatural
+\ls1\ilvl1\cf0 {\listtext	\uc0\u8259 	}
+\b def
+\b0 : 
+\f2 Log GDP per capit
+\f0 \
+{\listtext	\uc0\u8259 	}
+\b source
+\b0 : online-data-chapter-2-whr-2017.csv (Kim's link)\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural
+\ls1\ilvl0\cf0 {\listtext	\'95	}
+\b life_ladder
+\b0 \
+\pard\tx940\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li1440\fi-1440\pardirnatural
+\ls1\ilvl1\cf0 {\listtext	\uc0\u8259 	}
+\b def
+\b0 : ?\
+{\listtext	\uc0\u8259 	}
+\b source
+\b0 : online-data-chapter-2-whr-2017.csv (Kim's link)\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural
+\ls1\ilvl0
+\b \cf0 {\listtext	\'95	}wastewater
+\b0 \
+\pard\tx940\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li1440\fi-1440\pardirnatural
+\ls1\ilvl1\cf0 {\listtext	\uc0\u8259 	}
+\b def
+\b0 : 
+\f2 Population connected to wastewater treatment refers to the percentage of the resident population whose wastewater is treated at wastewater treatment plants
+\f0 \
+{\listtext	\uc0\u8259 	}
+\b source
+\b0 : {\field{\*\fldinst{HYPERLINK "https://unstats.un.org/unsd/environment/Time%20series.htm#LandAndAgriculture"}}{\fldrslt 
+\f3 \cf2 \expnd0\expndtw0\kerning0
+\ul \ulc2 https://unstats.un.org/unsd/environment/Time%20series.htm#LandAndAgriculture}}
+\f3 \cf2 \expnd0\expndtw0\kerning0
+\ul \ulc2 \
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural
+\ls1\ilvl0
+\f0 \cf0 \kerning1\expnd0\expndtw0 \ulnone {\listtext	\'95	}\
+}
