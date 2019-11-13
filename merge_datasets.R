@@ -84,11 +84,11 @@ refugee_data <- refugee_data[year>=1990]
 colnames(refugee_data)[2] <- "country"
 
 
+setnames(refugee_data, "Origin", "refugee_origin_country")
 
-refugee_data <- melt(refugee_data, id.vars = c("year", "country"), variable.name = "refugee_type",
+refugee_data <- melt(refugee_data, id.vars = c("year", "country", "refugee_origin_country"), variable.name = "refugee_type",
                      value.name = "num_persons")
 
-setnames(refugee_data, "Origin", "refugee_origin_country")
 
 refugee_data$iso3 <- countrycode(refugee_data$country, "country.name", "iso3c")
 
@@ -168,7 +168,7 @@ countries <- gsub(" ", "", unique(totalData$country), fixed = TRUE)
 # Take space out of country names.
 # Select relevant variables.
 # Rename countries if they are different than Irena's data.
-# Filter to only include countries that are in Inena's data. 
+# Filter to only include countries that are in Irena's data. 
 education$iso3 <- countrycode(education$X, "country.name", "iso3c")
 education_reduced <- education[!is.na(iso3)]
 
@@ -207,7 +207,7 @@ totalData <- merge(health_edu_data, totalData, all.y=TRUE, by=c("year", "iso3"),
 # ---------------------------
 
 # Read in current totalData
-totalData <- read.csv(paste0(wd, "totalData.csv"))
+#totalData <- read.csv(paste0(wd, "totalData.csv"))
 # Remove duplicate country name columns
 totalData <- totalData %>%
   mutate(country = country.x) %>%
@@ -232,7 +232,6 @@ precipitation <- precipitation %>%
 # Standardize country names
 precipitation$country <- gsub("Czechia", "Czech Republic", precipitation$country, fixed = TRUE)
 precipitation$country <- gsub("SyrianArabRepublic", "Syria", precipitation$country, fixed = TRUE)
-precipitation$country <- gsub("Sudan", "SouthSudan", precipitation$country, fixed = TRUE)
 
 # Left join precip onto totalData
 totalData <- dplyr::left_join(totalData, precipitation, by = c("country", "year")) #totalData
@@ -274,24 +273,36 @@ wastewater_long <- wastewater_long %>%
 
 totalData <- dplyr::left_join(totalData, wastewater_long, by = c("country", "year"))
 
+# -----------------------------------
+# Add in tropical country indicator
+# -----------------------------------
 
-# ---------------------------
-# Join Education Data
-# ---------------------------
+# Identify countries as tropical or not (1 = tropical, 0 = not)
 
-# Read in happiness data
-wastewater <- read.csv(paste0(wd, "Pop_Connected_Wastewater_Treatment.csv"), header = T)
+tropics <- read.csv(paste0(wd, "countries_list.csv"))
+totalData <- dplyr::left_join(totalData, tropics, by = c("country"))
 
-# Clean up and convert to long format
-wastewater <- wastewater[c(2:nrow(wastewater)), c(seq(from = 1, to = ncol(wastewater), by = 2))]
-colnames(wastewater) <- c("country", gsub("X", "", colnames(wastewater)[2:ncol(wastewater)]))
-wastewater_long <- melt(wastewater, id.vars = c("country"))
-colnames(wastewater_long) <- c("country", "year", "wastewater")
-wastewater_long <- wastewater_long %>%
-  mutate(wastewater = as.numeric(wastewater)) %>%
-  mutate(year = as.numeric(as.character(year)))
+# -----------------------------------
+# Add in country area
+# -----------------------------------
 
-totalData <- dplyr::left_join(totalData, wastewater_long, by = c("country", "year"))
+# because precipitation data is measured in terms of total volume of water in a 
+#  given country, here we adjust for total area of each country by measuring
+#  precipitation in volume/area
+
+# precip_per_km2 <- precip / area_km2
+
+land_area <- read.csv(paste0(wd, "land_area.csv"))
+colnames(land_area) <- c("country", "iso3", "area_km2")
+land_area <- land_area %>%
+  select(c(iso3, area_km2))
+
+totalData <- dplyr::left_join(totalData, land_area, by = c("iso3"))
+
+# calculate precip/area variable
+totalData <- totalData %>%
+  mutate(precip_per_km2 = precip / area_km2)
+
 
 # -----------------------------
 # Save new version of totalData
