@@ -6,13 +6,15 @@ library(lubridate)
 library(ggplot2)
 library(plotly)
 library(countrycode)
+library(reshape2)
 
 # Kim's wd <- "C:/Users/hochsted/Documents/653_project/data_files/"
 # Irena's wd: wd  <- "~/repos/653_project/data_files/"
+# Madeline's wd: wd <- "/Users/madelineabbott/Desktop/biostat653_project/653_project-master/data_files/"
 ## load the data 
 
 ###----------------------------
-##temp and disease data 
+## temp and disease data 
 ##---------------------------
 disease_data1 <- data.table(read.csv(paste0(wd,"IHME-GBD_2017_DATA-1066c200-1.csv"), stringsAsFactors = FALSE))
 disease_data2 <- data.table(read.csv(paste0(wd,"IHME-GBD_2017_DATA-1066c200-2.csv"), stringsAsFactors = FALSE))
@@ -63,7 +65,7 @@ colnames(urban_data)[1] <- c("iso3")
 colnames(urban_data)[2:31] <- seq(1990, 2019, 1)
 
 urban_data <- melt(urban_data, id.vars = c("iso3"), variable.name = "year",
-                     value.name = "urban_perc")
+                   value.name = "urban_perc")
 urban_data  <- urban_data[!is.na(iso3)]
 
 urban_data$urban_perc <- as.numeric(urban_data$urban_perc)
@@ -100,7 +102,7 @@ refugee_subset <- refugee_data[,c("year", "iso3", "refugee_origin_country", "ref
 
 refugee_subset$num_persons <- as.numeric(refugee_subset$num_persons)
 refugee_subset  <- refugee_subset [,list(num_persons=sum(na.omit(num_persons))), by=c("refugee_type",
-                                                                    "iso3","year")]
+                                                                                      "iso3","year")]
 
 
 ## refugee and urban data 
@@ -119,7 +121,7 @@ colnames(gdpData)[5:64] <- seq(1960,2019,1)
 
 gdpData <- melt(gdpData, id.vars = c("gdp_ind_name", "gdp_ind_code", "country", "iso3"),
                 variable.name = "year",
-                     value.name = "gdp_measurement")
+                value.name = "gdp_measurement")
 
 gdpData$year <- as.numeric(as.character(gdpData$year))
 
@@ -153,11 +155,11 @@ health_ex <- data.table(read.csv(paste0(wd,"UN_HealthExpenditure.csv"),
                                  stringsAsFactors = FALSE, skip = 1))
 
 health_p <- data.table(read.csv(paste0(wd,"UN_HealthPersonnel.csv"),
-                                 stringsAsFactors = FALSE, skip = 1))
+                                stringsAsFactors = FALSE, skip = 1))
 
 education <- data.table(read.csv(paste0(wd,"UN_Education.csv"),
-                               stringsAsFactors = FALSE,
-                      skip = 1))
+                                 stringsAsFactors = FALSE,
+                                 skip = 1))
 
 # Take the space out of country names.
 countries <- gsub(" ", "", unique(totalData$country), fixed = TRUE)
@@ -182,7 +184,7 @@ health_reduced <- health_reduced[health_p_measure%in%c("Health personnel: Physic
                                                        "Health personnel: Physicians (per 1000 population)",
                                                        "Health personnel: Pharmacists (number)",
                                                        "Health personnel: Pharmacists (per 1000 population)"
-                                                       )]
+)]
 
 setnames(health_reduced2, c("Series", "Value","Year"), c("health_exp_measure", "health_exp_value",                                                         "year"))
 health_reduced2 <- health_reduced2[,c("health_exp_measure", "health_exp_value","year", "iso3"),with=FALSE]
@@ -196,7 +198,105 @@ health_edu_data <- merge(health_data, education_reduced,by=c("year", "iso3"),all
 
 totalData <- merge(health_edu_data, totalData, all.y=TRUE, by=c("year", "iso3"), allow.cartesian=TRUE)
 
-write.csv(totalData, paste0(wd, "totalData.csv"), row.names=FALSE)
 
+
+
+
+# ---------------------------
+# Join Precipitation Data
+# ---------------------------
+
+# Read in current totalData
+totalData <- read.csv(paste0(wd, "totalData.csv"))
+# Remove duplicate country name columns
+totalData <- totalData %>%
+  mutate(country = country.x) %>%
+  select(-c(country.x, country.y))
+# Take the space out of country names.
+totalData$country <- gsub(" ", "", totalData$country, fixed = TRUE)
+# Standardize country names (note: not spaces between multi-word names)
+totalData$country <- gsub("Egypt,ArabRep.", "Egypt", totalData$country, fixed = TRUE)
+totalData$country <- gsub("Korea,Rep.", "Korea", totalData$country, fixed = TRUE)
+totalData$country <- gsub("SyrianArabRepublic", "Syria", totalData$country, fixed = TRUE)
+totalData$country <- gsub("Venezuela,RB", "Venezuela", totalData$country, fixed = TRUE)
+totalData$country <- gsub("Yemen,Rep.", "Yemen", totalData$country, fixed = TRUE)
+totalData$country <- gsub("KyrgyzRepublic", "Kyrgyzstan", totalData$country, fixed = TRUE)
+
+# Read in precipitation data
+precipitation <- read.csv(paste(wd, "UNdata_Precipitation.csv", sep = ""))
+precipitation <- precipitation[,c(1, 2, 3)]
+colnames(precipitation) <- c("country", "year", "precip")
+precipitation <- precipitation %>%
+  dplyr::mutate(year = as.numeric(as.character(year))) %>%
+  dplyr::mutate(country = gsub(" ", "", country, fixed = TRUE))
+# Standardize country names
+precipitation$country <- gsub("Czechia", "Czech Republic", precipitation$country, fixed = TRUE)
+precipitation$country <- gsub("SyrianArabRepublic", "Syria", precipitation$country, fixed = TRUE)
+precipitation$country <- gsub("Sudan", "SouthSudan", precipitation$country, fixed = TRUE)
+
+# Left join precip onto totalData
+totalData <- dplyr::left_join(totalData, precipitation, by = c("country", "year")) #totalData
+
+
+# ---------------------------
+# Join Happiness Data
+# ---------------------------
+
+# Read in happiness data
+happiness <- read.csv(paste0(wd, "online-data-chapter-2-whr-2017.csv"))
+
+# Select a few variables of interest
+happiness <- happiness %>%
+  select(c("country", "year", "gini.of.household.income.reported.in.Gallup..by.wp5.year",
+           "Healthy.life.expectancy.at.birth", "Log.GDP.per.capita",
+           "Life.Ladder"))
+colnames(happiness) <- c("country", "year", "gini_of_household_income", "healthy_life_exp_at_birth", "log_GDP_per_capita", "life_ladder")
+
+# Left-join happiness data onto totalData
+totalData <- dplyr::left_join(totalData, happiness, by = c("country", "year"))
+
+
+# ---------------------------
+# Join Wastewater Tx Data
+# ---------------------------
+
+# Read in wastewater treatment data
+wastewater <- read.csv(paste0(wd, "Pop_Connected_Wastewater_Treatment.csv"), header = T)
+
+# Clean up and convert to long format
+wastewater <- wastewater[c(2:nrow(wastewater)), c(seq(from = 1, to = ncol(wastewater), by = 2))]
+colnames(wastewater) <- c("country", gsub("X", "", colnames(wastewater)[2:ncol(wastewater)]))
+wastewater_long <- melt(wastewater, id.vars = c("country"))
+colnames(wastewater_long) <- c("country", "year", "wastewater")
+wastewater_long <- wastewater_long %>%
+  mutate(wastewater = as.numeric(wastewater)) %>%
+  mutate(year = as.numeric(as.character(year)))
+
+totalData <- dplyr::left_join(totalData, wastewater_long, by = c("country", "year"))
+
+
+# ---------------------------
+# Join Education Data
+# ---------------------------
+
+# Read in happiness data
+wastewater <- read.csv(paste0(wd, "Pop_Connected_Wastewater_Treatment.csv"), header = T)
+
+# Clean up and convert to long format
+wastewater <- wastewater[c(2:nrow(wastewater)), c(seq(from = 1, to = ncol(wastewater), by = 2))]
+colnames(wastewater) <- c("country", gsub("X", "", colnames(wastewater)[2:ncol(wastewater)]))
+wastewater_long <- melt(wastewater, id.vars = c("country"))
+colnames(wastewater_long) <- c("country", "year", "wastewater")
+wastewater_long <- wastewater_long %>%
+  mutate(wastewater = as.numeric(wastewater)) %>%
+  mutate(year = as.numeric(as.character(year)))
+
+totalData <- dplyr::left_join(totalData, wastewater_long, by = c("country", "year"))
+
+# -----------------------------
+# Save new version of totalData
+# -----------------------------
+
+#write.csv(totalData, paste0(wd, "totalData.csv"), row.names=FALSE)
 
 
